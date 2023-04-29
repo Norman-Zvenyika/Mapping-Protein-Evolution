@@ -73,13 +73,18 @@ def main():
             # write the distance matrix to a file
             write_distance_matrix(headers,matrix,output_file_path,"w","Original Distance Table")
 
-            # build the UPGMA tree
+            # # build the UPGMA tree
             write_distance_matrix(headers,matrix,output_file_path,"a","UPGMA Tree Distance Tables")
-            # upgamTree = upgma(matrix, headers, output_file_path)
+            clusters = upgma(headers, matrix,output_file_path)
+            
+            # # Print the UPGMA tree
+            # tree_root = list(clusters.values())[0]
+            # print(tree_root)
+
             # print("Pairs of nodes and their heights: ")
 
             # build a Neighbor Joining tree
-            write_distance_matrix(headers,matrix,output_file_path,"a","Neighbor Joining Tree Distance Tables")
+            # write_distance_matrix(headers,matrix,output_file_path,"a","Neighbor Joining Tree Distance Tables")
             # njTree = upgma(matrix, headers, output_file_path)
             # print("Distances between pairs of artificial and concrete nodes: ")
 
