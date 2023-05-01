@@ -68,7 +68,7 @@ def UPGMA(table, labels):
         # Locate lowest cell in the table
         min_val, x, y = lowest_cell(table)
 
-        # calculate height of the tree
+        # calculate height of the leg of each
         height = min_val /2.0
 
         # Join the table on the cell co-ordinates

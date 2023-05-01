@@ -1,85 +1,53 @@
+import re
+
+# function for extracting label and row information
+def process_line(line_parts):
+
+    # Compile a regex pattern to match the label and the first float value (if any)
+    pattern = re.compile(r'(\w+)\|PDB(?:([\d.]+))?$')
+
+    # Search for the pattern in the first part of line_parts
+    match = pattern.search(line_parts[0])
+
+    # Extract the label from the match
+    label = match.group(1)
+
+    # Check if there's a float value after the "PDB" string
+    if match.group(2):
+        first_value = float(match.group(2))
+        row = [first_value] + list(map(float, line_parts[1:]))
+    else:
+        row = list(map(float, line_parts[1:]))
+
+    return label, row
+
+# function for parsing the distance matrix
 def read_distance_matrix(file_path):
-    headers = []
-    matrix = []
-
-    with open(file_path, 'r') as file:
-        for line in file:
-            if not line.strip():
-                continue
-            row = line.strip().split()
-
-            if not headers:
-                headers = row
-                continue
-
-            species = row[0]
-            row_data = [float(x) if x != '-' else '-' for x in row[1:]]
-            matrix.append(row_data)
-
-    n = len(matrix)
-    print("Matrix rows is")
-    print(n)
     
-    for i in range(n):
-        for j in range(i + 1, n):
-            if len(matrix[i]) <= j:
-                matrix[i].append(matrix[j][i])
-            elif len(matrix[j]) <= i:
-                matrix[j].insert(i, matrix[i][j])
+    # open the file and read lines
+    with open(file_path, "r") as f:
+        lines = f.readlines()
 
-    return headers, matrix
+    # Extract the number of lines from the first line
+    num_lines = int(lines[0].strip())
 
+    # Initialize the distance matrix as a list of lists
+    matrix = []
+    labels = []
 
-def write_distance_matrix(headers, matrix, output_file_path, mode='w', table_title=None):
-    with open(output_file_path, mode) as file:
-        if mode == 'a':
-            # Add an empty line to separate the distance matrices if appending
-            file.write('\n\n')
+    # Iterate through the lines (excluding the first line with num_lines)
+    for line in (lines[1:num_lines+1]):
+        
+        # Split the line by whitespace
+        line_parts = line.strip().split()
 
-        if table_title:
-            file.write(table_title + '\n')
+        #get the label and row information
+        label, row = process_line(line_parts)
 
-        # Write the headers (species names) to the first line
-        formatted_headers = '          \t' + '\t'.join([header.ljust(10) for header in headers]) + '\n'
-        file.write(formatted_headers)
+        #append the label
+        labels.append(label)
 
-        # Write the distance matrix to the remaining lines
-        for idx, row in enumerate(matrix):
-            # Fill in the missing values in the lower or upper triangle with "-"
-            if len(row) < len(headers):
-                missing_values = ['-'.ljust(10)] * idx
-                complete_row = missing_values + [(f"{x:.8f}" if isinstance(x, float) else x).ljust(10) for x in row]
-            else:
-                missing_values = ['-'.ljust(10)] * (len(headers) - len(row))
-                complete_row = [(f"{x:.8f}" if isinstance(x, float) else x).ljust(10) for x in row] + missing_values
+        # Append the row to the matrix
+        matrix.append(row)
 
-            # Ensure that the index is within the range of headers before writing to file
-            if idx < len(headers):
-                file.write(headers[idx].ljust(10) + '\t'.join(complete_row) + '\n')
-
-# def write_distance_matrix(headers, matrix, output_file_path, mode='w', table_title=None):
-#     with open(output_file_path, mode) as file:
-#         if mode == 'a':
-#             # Add an empty line to separate the distance matrices if appending
-#             file.write('\n\n')
-
-#         if table_title:
-#             file.write(table_title + '\n')
-
-#         # Write the headers (species names) to the first line
-#         formatted_headers = '          \t' + '\t'.join([header.ljust(10) for header in headers]) + '\n'
-#         file.write(formatted_headers)
-
-#         # Write the distance matrix to the remaining lines
-#         for idx, row in enumerate(matrix):
-#             # Fill in the missing values in the lower or upper triangle with "-"
-#             if len(row) < len(headers):
-#                 missing_values = ['-'.ljust(10)] * idx
-#                 complete_row = missing_values + [(f"{x:.8f}" if x != '-' else x).ljust(10) for x in row]
-#             else:
-#                 missing_values = ['-'.ljust(10)] * (len(headers) - len(row))
-#                 complete_row = [(f"{x:.8f}" if x != '-' else x).ljust(10) for x in row] + missing_values
-
-#             # Ensure that the index is within the range of headers before writing to file
-#             if idx < len(headers):
-#                 file.write(headers[idx].ljust(10) + '\t'.join(complete_row) + '\n')
+    return labels, matrix

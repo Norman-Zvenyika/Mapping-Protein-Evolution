@@ -1,103 +1,85 @@
-from read_distance_matrix import *
 
-from collections import defaultdict
+# for locating the smallest cell in the table
+def lowest_cell(table):
+    
+    # Set default to infinity
+    min_cell_val = float("inf")
+    x, y = -1, -1
 
-def find_min_distance(dist_matrix):
-    min_value = float('inf')
-    min_index = (-1, -1)
+    # Go through every cell, looking for the lowest
+    for i in range(len(table)):
+        for j in range(len(table[i])):
+            if table[i][j] < min_cell_val:
+                min_cell_val = table[i][j]
+                x, y = i, j
 
-    for i in range(len(dist_matrix)):
-        for j in range(len(dist_matrix)):
-            if i == j:
-                continue  # Skip diagonal elements
-            if dist_matrix[i][j] != "-" and dist_matrix[i][j] < min_value:
-                min_value = dist_matrix[i][j]
-                min_index = (i, j)
-
-    return min_index, min_value
-
-
-def update_distance_matrix(dist_matrix, headers,output_file_path, i, j, new_cluster):
-    for k, row in enumerate(dist_matrix):
-        if k == i:
-            row[j] = new_cluster
-        elif k == j:
-            dist_matrix[k] = [new_cluster if x == i else value for x, value in enumerate(row)]
-    # write_distance_matrix(headers,dist_matrix,output_file_path,"a")
+    # Return the x, y co-ordinate of cell and the min_cell_val
+    return min_cell_val, x, y
 
 
+# for combining two labels in a list of labels
+def join_labels(labels, a, b, height):
+    
+    # Swap if the indices are not ordered
+    if b < a:
+        a, b = b, a
 
-def upgma(headers, dist_matrix, output_file_path):
-    clusters = {i: (headers[i], 0.0) for i in range(len(headers))}
-    heights = defaultdict(float)
+    # Join the labels in the first index, together with each leg distance
+    labels[a] = "(" + labels[a] + "," + labels[b] + ", " + str(height) + ")"
 
-    while len(clusters) > 1:
+    # Remove the (now redundant) label in the second index
+    del labels[b]
+
+
+# for joining the entries of a table on the cell (a, b) by averaging their values
+def join_table(table, a, b):
+    
+    # Swap if the indices are not ordered
+    if b < a:
+        a, b = b, a
+
+    # For the lower index, reconstruct the entire row (A, i), where i < A
+    row = []
+    for i in range(0, a):
+        row.append((table[a][i] + table[b][i])/2)
+    table[a] = row
+    
+    # Then, reconstruct the entire column (i, A), where i > A
+    #   Note: Since the matrix is lower triangular, row b only contains values for indices < b
+    for i in range(a+1, b):
+        table[i][a] = (table[i][a]+table[b][i])/2
         
-        # find the minimum distance between the two labels
-        (i, j), dist = find_min_distance(dist_matrix)
-
-        height = dist / 2.0
-
-        new_cluster = tuple(clusters[x] for x in (i, j))
-        heights[new_cluster] = height
-        print(height)
-        print(new_cluster)
-
-        update_distance_matrix(dist_matrix, headers,output_file_path, i, j, new_cluster)
-        break
+    #   We get the rest of the values from row i
+    for i in range(b+1, len(table)):
+        table[i][a] = (table[i][a]+table[i][b])/2
         
-    #     # Replace None values with dashes only when calling write_distance_matrix
-    #     dist_matrix_with_dashes = [['-' if x is None else x for x in row] for row in dist_matrix]
-    #     write_distance_matrix(headers, dist_matrix_with_dashes, output_file_path)
+        # Remove the (now redundant) second index column entry
+        del table[i][b]
 
-    #     del clusters[j]
-    #     clusters[i] = new_cluster
-
-    # return clusters, heights
+    # Remove the (now redundant) second index row
+    del table[b]
 
 
+# for running the UPGMA algorithm on a labelled table
+def upgma(labels, table):
+    
+    # Until all labels have been joined
+    while len(labels) > 1:
+        
+        # Locate lowest cell in the table
+        min_val, x, y = lowest_cell(table)
 
+        # calculate height of the leg of each entry (x, y)
+        height = min_val /2.0
 
+        # Join the table on the cell co-ordinates
+        join_table(table, x, y)
 
+        # Update the labels accordingly
+        join_labels(labels, x, y, height)
 
-# # function for generating the upgam tree
-# def upgma(matrix, headers, output_file_path):
-#     clusters = [[header] for header in headers]
+        # display the table
 
-#     while len(clusters) > 1:
-#         # Find the pair of clusters with the smallest distance
-#         min_distance = float('inf')
-#         min_pair = (0, 1)
+    # Return the final label
+    return labels[0]
 
-#         for i in range(len(matrix)):
-#             for j in range(i + 1, len(matrix[i])):
-#                 if matrix[i][j] < min_distance:
-#                     min_distance = matrix[i][j]
-#                     min_pair = (i, j)
-
-#         # Merge the clusters
-#         i, j = min_pair
-#         new_cluster = (clusters[i], clusters[j], min_distance / 2)
-#         clusters.append(new_cluster)
-
-#         # Remove the merged clusters from the list
-#         clusters.pop(max(i, j))
-#         clusters.pop(min(i, j))
-
-#         # Update the distance matrix
-#         new_row = []
-#         for k in range(len(matrix)):
-#             if k != i and k != j:
-#                 new_distance = (matrix[i][k] * len(clusters[i]) + matrix[j][k] * len(clusters[j])) / (len(clusters[i]) + len(clusters[j]))
-#                 new_row.append(new_distance)
-
-#         matrix.append(new_row)
-#         matrix.pop(max(i, j))
-#         for row in matrix:
-#             row.pop(max(i, j))
-#             row.pop(min(i, j))
-
-#         # Write the updated distance matrix to the output file
-#         write_distance_matrix(headers, matrix, output_file_path, "a")
-
-#     return clusters[0]

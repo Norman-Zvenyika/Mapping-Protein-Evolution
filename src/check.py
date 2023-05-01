@@ -1,6 +1,6 @@
 import subprocess
-# from Bio import AlignIO
-# from Bio.Phylo.TreeConstruction import DistanceCalculator
+from Bio import AlignIO
+from Bio.Phylo.TreeConstruction import DistanceCalculator
 
 # Set the ClustalW2 executable path
 # Replace './clustalw2' with the path to the ClustalW2 executable on your system

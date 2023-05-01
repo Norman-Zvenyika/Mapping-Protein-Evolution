@@ -1,6 +1,7 @@
 import os
 from read_distance_matrix import *
 from upgma import *
+from n_joining_tree import *
 
 
 # display possible file input in data and allow the user to choose
@@ -62,31 +63,26 @@ def main():
         # Prompt the user for the file name
         input_file_path = getInputFile(input_data_dir)
         
-        print("\n")
-        
         # if valid file input selected
         if input_file_path is not None:
             
             # read the distance matrix
-            headers, matrix = read_distance_matrix(input_file_path)
-
-            # write the distance matrix to a file
-            write_distance_matrix(headers,matrix,output_file_path,"w","Original Distance Table")
-
-            # # build the UPGMA tree
-            write_distance_matrix(headers,matrix,output_file_path,"a","UPGMA Tree Distance Tables")
-            clusters = upgma(headers, matrix,output_file_path)
+            labels, matrix = read_distance_matrix(input_file_path)
             
-            # # Print the UPGMA tree
-            # tree_root = list(clusters.values())[0]
-            # print(tree_root)
+            # # generate nodes and their respective heights
+            # nodesAndHeights = upgma(labels, matrix)
 
-            # print("Pairs of nodes and their heights: ")
+            # print("\nThe respective nodes and their heights are: ")
+            
+            # # print the nodes
+            # print(nodesAndHeights)
 
             # build a Neighbor Joining tree
-            # write_distance_matrix(headers,matrix,output_file_path,"a","Neighbor Joining Tree Distance Tables")
-            # njTree = upgma(matrix, headers, output_file_path)
-            # print("Distances between pairs of artificial and concrete nodes: ")
+            tree, distances = neighbor_joining(labels, matrix)
+
+            # # Print the distances between pairs of artificial and concrete nodes
+            # for dist in distances:
+            #     print(f"{dist[0]}, {dist[1]}, {dist[2]}")
 
             # output a text illustration of the updated tree
 
