@@ -4,3 +4,41 @@
 3PJ6_A|PDB0.14  0.14  
 3QIN_A|PDB0.95  0.95  0.95  
 3QIO_A|PDB0.95  0.95  0.95  0.0  
+
+
+
+# # Example usage:
+# labels = ["3MXE_A", "3MXE_B", "3PJ6_A", "3QIN_A", "3QIO_A"]
+# distance_matrix = [[], [0.0], [0.14, 0.14], [0.95, 0.95, 0.95], [0.95, 0.95, 0.95, 0.0]]
+# displayDistanceTable(labels, distance_matrix)
+# print("\n")
+
+# # calculate matrix with R1
+# matrix_with_r1 = r1Values(labels, distance_matrix)
+# print("\n")
+
+# # compute the new distance table
+# updated_matrix = updateQTable(labels, matrix_with_r1)
+# displayDistanceTable(labels, updated_matrix)
+# print("\n")
+# nodes = mincell(labels,updated_matrix)
+
+
+# # compute branch lengths
+# branch_lengths = calculate_branch_lengths(matrix_with_r1, labels, nodes)
+
+# # create a hashmap to store the nodes and their corresponding values
+# nodes_val = {}
+# new_label = "U1"
+# nodes_val[new_label] = nodes
+
+# # update labels
+# new_labels = [label for label in labels if label not in nodes]
+# new_labels.append(new_label)
+
+# print("Labels:", new_labels)
+# print("Branch lengths:", branch_lengths)
+
+# print("\n")
+# ups = update_distance_matrix(distance_matrix, labels, new_labels, nodes_val)
+# displayDistanceTable(new_labels, ups)

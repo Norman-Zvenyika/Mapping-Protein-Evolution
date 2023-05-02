@@ -105,6 +105,20 @@ def mincell(labels, matrix):
 
     return (labels[min_i], labels[min_j])
 
+def finalNodes(labels, matrix):
+    min_value = float('inf')
+    min_i = None
+    min_j = None
+
+    for i, row in enumerate(matrix):
+        for j, value in enumerate(row):
+            if value is not None and value < min_value:
+                min_value = value
+                min_i = i
+                min_j = j
+
+    return (labels[min_i], labels[min_j], min_value)
+
 def find_distance(matrix, labels, node_i, node_j):
     i, j = labels.index(node_i), labels.index(node_j)
     if i < j:
@@ -123,86 +137,151 @@ def calculate_branch_lengths(matrix, labels, nodes):
 
     return branch_length_i, branch_length_j
 
-# def find_distance_1(matrix, labels, node_i, node_j):
-#     if isinstance(node_i, tuple):
-#         distance = 0
-#         for i in range(len(node_i)):
-#             distance += find_distance(matrix, labels, node_i[i], node_j[i])
-#         return distance / len(node_i)
-#     else:
-#         i, j = labels.index(node_i), labels.index(node_j)
-#         if i > j:
-#             i, j = j, i
-#         return matrix[j][i]
-
 def update_distance_matrix(old_matrix, old_labels, new_labels, merged_nodes):
     new_matrix = []
 
-    for new_label in new_labels:
+    for i, new_label in enumerate(new_labels):
         row = []
-        for other_new_label in new_labels:
-            if new_label == other_new_label:
+        for j, other_new_label in enumerate(new_labels):
+            if j >= i:
                 row.append(None)
                 continue
 
-            if new_label == merged_nodes[0] or new_label == merged_nodes[1]:
-                label_1, label_2 = merged_nodes
-            else:
-                label_1, label_2 = new_label, new_label
+            if new_label in merged_nodes and other_new_label in merged_nodes:
+                label_1, label_2 = merged_nodes[new_label]
+                other_label_1, other_label_2 = merged_nodes[other_new_label]
 
-            if other_new_label == merged_nodes[0] or other_new_label == merged_nodes[1]:
-                other_label_1, other_label_2 = merged_nodes
-            else:
-                other_label_1, other_label_2 = other_new_label, other_new_label
+                distance = (find_distance(old_matrix, old_labels, label_1, other_label_1) +
+                            find_distance(old_matrix, old_labels, label_1, other_label_2) -
+                            find_distance(old_matrix, old_labels, label_2, other_label_2)) / 2
+            elif new_label in merged_nodes:
+                label_1, label_2 = merged_nodes[new_label]
 
-            distance = (find_distance(old_matrix, old_labels, label_1, other_label_1) +
-                        find_distance(old_matrix, old_labels, label_1, other_label_2) -
-                        find_distance(old_matrix, old_labels, label_2, other_label_2))
+                distance = (find_distance(old_matrix, old_labels, label_1, other_new_label) +
+                            find_distance(old_matrix, old_labels, label_2, other_new_label) -
+                            find_distance(old_matrix, old_labels, label_1, label_2)) / 2
+            elif other_new_label in merged_nodes:
+                other_label_1, other_label_2 = merged_nodes[other_new_label]
+
+                distance = (find_distance(old_matrix, old_labels, new_label, other_label_1) +
+                            find_distance(old_matrix, old_labels, new_label, other_label_2) -
+                            find_distance(old_matrix, old_labels, other_label_1, other_label_2)) / 2
+            else:
+                distance = find_distance(old_matrix, old_labels, new_label, other_new_label)
+
             row.append(distance)
 
         new_matrix.append(row)
 
     return new_matrix
 
+
+
+
+from pprint import pprint
+
+def print_tree(tree,branch_lengths_map):
+    for node, children in tree.items():
+        child1, child2 = children
+        branch_length1 = branch_lengths_map[(node, child1)]
+        branch_length2 = branch_lengths_map[(node, child2)]
+        print(f"{child1}, {node}, {branch_length1}")
+        print(f"{child2}, {node}, {branch_length2}")
+
+def nj_tree_building(labels, distance_matrix):
+    nodes_val = {}
+    branch_lengths_map = {}
+    internal_node_count = 1
+
+    original_matrix = [row.copy() for row in distance_matrix]
+    old_labels = labels.copy()
+
+           
+    displayDistanceTable(labels, distance_matrix)
+    print("\n")
+
+    while len(labels) > 2:
+
+        # Calculate matrix with R1
+        matrix_with_r1 = r1Values(labels, distance_matrix)
+        print("\n")
+
+        # Compute the new distance table
+        updated_matrix = updateQTable(labels, matrix_with_r1)
+        displayDistanceTable(labels, updated_matrix)
+        print("\n")
+
+        # Find the nodes with the minimum value in the updated matrix
+        nodes = mincell(labels, updated_matrix)
+
+        # Compute branch lengths
+        branch_lengths = calculate_branch_lengths(matrix_with_r1, labels, nodes)
+
+        # Create a hashmap to store the nodes and their corresponding values
+        new_label = f"U{internal_node_count}"
+        nodes_val[new_label] = nodes
+
+        # Update the branch_lengths_map
+        branch_lengths_map[(new_label, nodes[0])] = branch_lengths[0]
+        branch_lengths_map[(new_label, nodes[1])] = branch_lengths[1]
+
+        # Update labels
+        new_labels = [label for label in labels if label not in nodes]
+        new_labels.append(new_label)
+
+        # Update the distance matrix
+        distance_matrix = update_distance_matrix(original_matrix, old_labels, new_labels, nodes_val)
+
+        # Update labels and internal_node_count
+        labels = new_labels
+        internal_node_count += 1
+        displayDistanceTable(labels, distance_matrix)
+        print("\n")
+
+    # # Handle the final two nodes
+    final_nodes = finalNodes(labels, distance_matrix)
+    return nodes_val, branch_lengths_map, final_nodes
+
+
 # Example usage:
-labels = ["3MXE_A", "3MXE_B", "3PJ6_A", "3QIN_A", "3QIO_A"]
-distance_matrix = [[], [0.0], [0.14, 0.14], [0.95, 0.95, 0.95], [0.95, 0.95, 0.95, 0.0]]
-displayDistanceTable(labels, distance_matrix)
-print("\n")
+labels = ["A", "B", "C", "D"]
+distance_matrix = [[], [17], [26, 12], [27, 18, 14]]
+# labels = ["3MXE_A", "3MXE_B", "3PJ6_A", "3QIN_A", "3QIO_A"]
+# distance_matrix = [[], [0.0], [0.14, 0.14], [0.95, 0.95, 0.95], [0.95, 0.95, 0.95, 0.0]]
+tree, branch_lengths_map,final_nodes = nj_tree_building(labels, distance_matrix)
+print("Neighbor Joining Tree:")
+print(f"{final_nodes[0]}, {final_nodes[1]}, {final_nodes[2]}")
+print_tree(tree, branch_lengths_map)
 
-# calculate matrix with R1
-matrix_with_r1 = r1Values(labels, distance_matrix)
-print("\n")
+# displayDistanceTable(labels, distance_matrix)
+# print("\n")
 
-# compute the new distance table
-updated_matrix = updateQTable(labels, matrix_with_r1)
-displayDistanceTable(labels, updated_matrix)
-print("\n")
-nodes = mincell(labels,updated_matrix)
-print("The nodes are: ")
-print(nodes)
+# # calculate matrix with R1
+# matrix_with_r1 = r1Values(labels, distance_matrix)
+# print("\n")
 
-# compute branch lengths
-branch_lengths = calculate_branch_lengths(matrix_with_r1, labels, nodes)
+# # compute the new distance table
+# updated_matrix = updateQTable(labels, matrix_with_r1)
+# displayDistanceTable(labels, updated_matrix)
+# print("\n")
+# nodes = mincell(labels,updated_matrix)
 
-# merge lables
-merged_label = nodes[0] + " - " + nodes[1]
 
-# update labels
-new_labels = [label for label in labels if label not in nodes]
-new_labels.append(merged_label)
+# # compute branch lengths
+# branch_lengths = calculate_branch_lengths(matrix_with_r1, labels, nodes)
 
-print("Labels:", new_labels)
-print("Branch lengths:", branch_lengths)
+# # create a hashmap to store the nodes and their corresponding values
+# nodes_val = {}
+# new_label = "U1"
+# nodes_val[new_label] = nodes
 
-print("\n")
-ups = update_distance_matrix(distance_matrix, labels, new_labels, nodes)
-displayDistanceTable(new_labels, ups)
+# # update labels
+# new_labels = [label for label in labels if label not in nodes]
+# new_labels.append(new_label)
 
-# recreate an updated matrix using new labels, and old matrix values
-# use the 
-# for eaxmple, use the old matrix to find the distance between 3MXEA and 3MXE_B and all other values. Remember, the 
-# diagonal (3MXEA, 3MXEA) should be left as None. 
-# to find the distance between 3MXEA and ('3QIO_A', '3QIN_A'), we use the old distance matrix formula:
-# d(('3QIO_A', '3QIN_A') and 3MXEA) = d(3MXEA, '3QIO_A') + d(3MXEA, '3QIN_A') - d('3QIO_A', '3QIN_A'))
-# this function should return a distance marix using the new labels.
+# print("Labels:", new_labels)
+# print("Branch lengths:", branch_lengths)
+
+# print("\n")
+# ups = update_distance_matrix(distance_matrix, labels, new_labels, nodes_val)
+# displayDistanceTable(new_labels, ups)
