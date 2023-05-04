@@ -1,2 +1,0 @@
-The respective nodes and their heights are: 
-(((3MXE_A|PDB,3MXE_B|PDB, 0.0),3PJ6_A|PDB, 0.07),(3QIN_A|PDB,3QIO_A|PDB, 0.0), 0.475)

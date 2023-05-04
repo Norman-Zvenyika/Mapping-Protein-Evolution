@@ -1,12 +1,13 @@
 import os
 from read_distance_matrix import *
 from upgma import *
-from n_joining_tree import *
+from neighbor_joining_tree import *
+from draw_tree import *
+import subprocess
 
 
 # display possible file input in data and allow the user to choose
 def getInputFile(dataDirectory):
-    print("\n")
     # List all files in the data directory
     files = [f for f in os.listdir(dataDirectory) if os.path.isfile(os.path.join(dataDirectory, f))]
     
@@ -48,7 +49,8 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     # Get the path to the data directory relative to the script directory
-    input_data_dir = os.path.join(script_dir, '..', 'clustalW2Output')
+    # input_data_dir = os.path.join(script_dir, '..', 'clustalW2Output')
+    input_data_dir = os.path.join(script_dir, '..', 'data')
 
     # Set the directory name relative to the current directory
     output_dir_name = os.path.join(script_dir, '..', 'results')
@@ -56,35 +58,61 @@ def main():
     # Set file to the output file
     nj_output_file_name = "neighbor_joining.txt"
     upgma_output_file_name = "upgma.txt"
+    tree_output_file_name = "tree.txt"
+    matrix_output_file_name = "distance_matrix.txt"
 
     # set path to the output file
     nj_output_file_path = os.path.join(output_dir_name,nj_output_file_name)
     upgma_output_file_path = os.path.join(output_dir_name,upgma_output_file_name)
+    tree_output_file_path = os.path.join(output_dir_name,tree_output_file_name)
+    distance_matrix_output_file_path = os.path.join(output_dir_name,matrix_output_file_name)
 
     try:
         # Prompt the user for the file name
-        input_file_path = getInputFile(input_data_dir)
+        print("\nEnter the name of file from clustalW output (see example titled \"example_clustalw.output\" in the data directory)\n")
+        input_file_clustalW = getInputFile(input_data_dir) 
         
-        # if valid file input selected
-        if input_file_path is not None:
-            from copy import deepcopy
-            
-            # read the distance matrix
-            labels, matrix = read_distance_matrix(input_file_path)
+        if input_file_clustalW is not None:
 
-            upgma_labels = labels.copy()  # Create a copy of the labels list
-            upgma_matrix = deepcopy(matrix)  # Create a deep copy of the matrix
-            
-            # generate nodes and their respective heights
-            upgma(upgma_labels, upgma_matrix, upgma_output_file_path)
+            # generate the distance matrix
+            script_path = os.path.join(script_dir, 'clustal2Matrix.py')
 
-            # build a Neighbor Joining tree
-            neighbor_joining(labels,matrix,nj_output_file_path)
+            print("\nGenerating the distance matrix........\n")
+            subprocess.run(['python3', script_path, input_file_clustalW, distance_matrix_output_file_path])
 
-            # build a tree illustration
+            # get the distance matrix generated
+            input_file_path = distance_matrix_output_file_path
 
-            # output a text illustration of the updated tree
+            # if valid file input selected
+            if input_file_path is not None:
+                from copy import deepcopy
+                
+                # read the distance matrix
+                print("\nParsing the distance matrix........")
+                labels, matrix = read_distance_matrix(input_file_path)
 
+                # Create a copy of the labels list
+                upgma_labels = labels.copy() 
+
+                # Create a deep copy of the matrix 
+                upgma_matrix = deepcopy(matrix)  
+                
+                # generate nodes and their respective heights
+                print("\nRunning the upgma algorithm........")
+                upgma(upgma_labels, upgma_matrix, upgma_output_file_path)
+
+                # Call the install_numpy function to ensure NumPy is installed
+                install_numpy()
+
+                # build a Neighbor Joining tree
+                print("\nRunning the neighbor join algorithm........")
+                neighbor_joining(labels,matrix,nj_output_file_path)
+
+                # build a tree illustration
+                print("\nDrawing the tree using the neighbor joining algorithm output........")
+                draw_tree(nj_output_file_path, tree_output_file_path)
+
+                print("\nDone\n")
 
     except FileNotFoundError:
         print(f"File not found: {input_file_path}")

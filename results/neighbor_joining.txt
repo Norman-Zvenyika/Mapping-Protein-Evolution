@@ -1,8 +1,0 @@
-distances between pairs of artificial and concrete nodes: 
-U2, 3MXE_A|PDB, 0.0
-U2, 3MXE_B|PDB, 0.0
-U3, 3PJ6_A|PDB, 0.1
-U1, 3QIN_A|PDB, 0.0
-U1, 3QIO_A|PDB, 0.0
-U3, U1, 0.9
-U3, U2, 0.1
