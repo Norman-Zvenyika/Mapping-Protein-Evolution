@@ -16,7 +16,7 @@ This program constructs phylogenetic trees using UPGMA and Neighbor Joining algo
 
 ## **Input**
 
-The input file should be a ClustalW output file containing sequence alignment data (see `example_clustalw.output` in the `data` directory).
+The input file should be a ClustalW output file containing sequence alignment data (see `example_clustalw.output` in the `data` directory). Start by adding this file to the data directory before you run the program.
 
 ## **Output**
 
