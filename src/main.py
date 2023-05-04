@@ -54,10 +54,12 @@ def main():
     output_dir_name = os.path.join(script_dir, '..', 'results')
 
     # Set file to the output file
-    distance_matrix_output_file_name = "distance_matrix.txt"
+    nj_output_file_name = "neighbor_joining.txt"
+    upgma_output_file_name = "upgma.txt"
 
     # set path to the output file
-    output_file_path = os.path.join(output_dir_name,distance_matrix_output_file_name)
+    nj_output_file_path = os.path.join(output_dir_name,nj_output_file_name)
+    upgma_output_file_path = os.path.join(output_dir_name,upgma_output_file_name)
 
     try:
         # Prompt the user for the file name
@@ -65,24 +67,21 @@ def main():
         
         # if valid file input selected
         if input_file_path is not None:
+            from copy import deepcopy
             
             # read the distance matrix
             labels, matrix = read_distance_matrix(input_file_path)
-            
-            # # generate nodes and their respective heights
-            # nodesAndHeights = upgma(labels, matrix)
 
-            # print("\nThe respective nodes and their heights are: ")
+            upgma_labels = labels.copy()  # Create a copy of the labels list
+            upgma_matrix = deepcopy(matrix)  # Create a deep copy of the matrix
             
-            # # print the nodes
-            # print(nodesAndHeights)
+            # generate nodes and their respective heights
+            upgma(upgma_labels, upgma_matrix, upgma_output_file_path)
 
             # build a Neighbor Joining tree
-            tree, distances = neighbor_joining(labels, matrix)
+            neighbor_joining(labels,matrix,nj_output_file_path)
 
-            # # Print the distances between pairs of artificial and concrete nodes
-            # for dist in distances:
-            #     print(f"{dist[0]}, {dist[1]}, {dist[2]}")
+            # build a tree illustration
 
             # output a text illustration of the updated tree
 

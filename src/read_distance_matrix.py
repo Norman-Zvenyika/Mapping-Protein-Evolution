@@ -9,8 +9,8 @@ def process_line(line_parts):
     # Search for the pattern in the first part of line_parts
     match = pattern.search(line_parts[0])
 
-    # Extract the label from the match
-    label = match.group(1)
+    label = re.match(r"(.+\|PDB)", line_parts[0]).group(1)
+    print(label)
 
     # Check if there's a float value after the "PDB" string
     if match.group(2):

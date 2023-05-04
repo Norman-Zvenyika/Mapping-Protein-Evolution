@@ -1,139 +1,85 @@
-def insertR1(distance_matrix):
-    new_column = [None] * len(matrix)
-    matrix = [row + [col_value] for row, col_value in zip(matrix, new_column)]
-    return matrix
+import sys
+import numpy as np
 
-def r1Values(labels, distance_matrix):
-    
-    # find the length of the matrix
-    n = len(distance_matrix)
+def neighbor_joining(labels, distance_matrix, outputFile):
+    n, disMatrix = process_input(labels, distance_matrix)
+    new_labels = labels + ['U' + str(i) for i in range(1, n - 1)]
+    adj = runNeighborJoining(disMatrix, n, new_labels)
+    saveResult(adj, new_labels,outputFile)
 
-    dist_matrix_R1 = insertR1(distance_matrix)
-
-    # insert an additional r1 column to the table
-
-    #(we can modify this function so that it inserts an r1 column and return the table)
-
-    # calculate the value of r1 for each column
-    
-    #example: column labelled 3MXE_A:
-    (0.0 + 0.14 + 0.95 + 0.95 )/(n-2)
-
-    # repeate this for the remaining columns
-
-    # display the resulting table
-
-    # return the table
-
-def calculate_q_matrix(distance_matrix):
-    n = len(distance_matrix)
-    q_matrix = [[0.0 for _ in range(n)] for _ in range(n)]
-    
-    for i in range(n):
-        for j in range(n):
-            if i != j:
-                q_matrix[i][j] = (n - 2) * distance_matrix[i][j] - sum(distance_matrix[i]) - sum(distance_matrix[j])
-    return q_matrix
-
-def find_min_q(q_matrix):
-    min_q = float('inf')
-    min_i = -1
-    min_j = -1
-    n = len(q_matrix)
-    
-    for i in range(n):
-        for j in range(i + 1, n):
-            if q_matrix[i][j] < min_q:
-                min_q = q_matrix[i][j]
-                min_i = i
-                min_j = j
-    return min_i, min_j
-
-def update_distance_matrix(distance_matrix, min_i, min_j):
-    new_row = [(distance_matrix[min_i][k] + distance_matrix[min_j][k]) / 2 for k in range(min(min_i, min_j))]
-
-    for k in range(min(min_i, min_j) + 1, max(min_i, min_j)):
-        new_row.append((distance_matrix[min_i][k] + distance_matrix[min_j][k]) / 2)
-
-    for k in range(max(min_i, min_j) + 1, len(distance_matrix)):
-        new_row.append((distance_matrix[min_i][k] + distance_matrix[min_j][k - 1]) / 2)
-
-    distance_matrix.pop(max(min_j, min_i))
-    distance_matrix.pop(min(min_j, min_i))
-
-    for i in range(len(distance_matrix)):
-        if i < min(min_i, min_j):
-            distance_matrix[i].pop(max(min_i, min_j))
-            distance_matrix[i].pop(min(min_i, min_j))
-            distance_matrix[i].append(new_row[i])
-        elif i < max(min_i, min_j):
-            distance_matrix[i].pop(max(min_i, min_j))
-            distance_matrix[i].append(new_row[i])
-        else:
-            distance_matrix[i].append(new_row[i])
-
-    distance_matrix.append(new_row)
-
-
-# function to display table during the neighbor join algorithm
-def displayQTable(labels, matrix):
-    new_column = [None] * len(matrix)
-    matrix = [row + [col_value] for row, col_value in zip(matrix, new_column)]
-
-    # Find the maximum width of a column
-    max_width = max(len(str(value)) for row in matrix for value in row if value is not None)
-
-    # Print the header row
-    header = " " * (max_width + 4)
-    for label in labels:
-        header += "{:^{width}}".format(label, width=max_width + 4)
-    print(header)
-
-    # Print the table
-    for row_label, row in zip(labels + ["R1"], matrix + [new_column]):
-        row_str = "{:<{width}}".format(row_label, width=max_width + 4)
-        for value in row:
-            if value is not None:
-                row_str += "{:<{width}}".format(value, width=max_width + 4)
-            else:
-                row_str += " " * (max_width + 4)
-        print(row_str)
-
-def neighbor_joining(labels, distance_matrix):
-    nodes = labels.copy()
+def process_input(labels, distance_matrix):
     n = len(labels)
-    internal_nodes = n
-    tree = {label: [] for label in labels}
-    distances = []
+    distMatrix = [[0]*n for _ in range(n)]
+    for i in range(n):
+        for j in range(i+1, n):
+            distMatrix[i][j] = distance_matrix[j][i]
+            distMatrix[j][i] = distance_matrix[j][i]
+    return n, distMatrix
 
-    displayQTable(labels, distance_matrix)
+def saveResult(adj, labels, outputFilePath):
+    with open(outputFilePath, 'w') as f:
+        visited = set()
+        f.write("distances between pairs of artificial and concrete nodes: \n")
+        for i, nodes in enumerate(adj):
+            for d, w in nodes:
+                if d not in visited:
+                    f.write(f"{labels[d]}, {labels[i]}, {w:.1f}\n")
+            visited.add(i)
 
-    # while len(distance_matrix) > 2:
-        # q_matrix = calculate_q_matrix(distance_matrix)
-    #     min_i, min_j = find_min_q(q_matrix)
-        
-    #     distance_i_j = distance_matrix[min_i][min_j]
-    #     new_label = f"U{internal_nodes}"
-        
-    #     distance_new_min_i = (distance_i_j + sum(distance_matrix[min_i]) - sum(distance_matrix[min_j])) / 2
-    #     distance_new_min_j = distance_i_j - distance_new_min_i
-        
-    #     distances.append((nodes[min_i], new_label, distance_new_min_i))
-    #     distances.append((nodes[min_j], new_label, distance_new_min_j))
-        
-    #     tree[nodes[min_i]].append(new_label)
-    #     tree[nodes[min_j]].append(new_label)
-    #     tree[new_label] = [nodes[min_i], nodes[min_j]]
-        
-    #     nodes.pop(min_j)
-    #     nodes.pop(min_i)
-    #     nodes.append(new_label)
-        
-    #     update_distance_matrix(distance_matrix, min_i, min_j)
-    #     internal_nodes += 1
-
-    # distances.append((nodes[0], nodes[1], distance_matrix[0][1]))
-    # tree[nodes[0]].append(nodes[1])
-    # tree[nodes[1]].append(nodes[0])
     
-    return tree, distances
+def printGraph(adj, labels):
+    visited = set()
+    for i, nodes in enumerate(adj):
+        for d, w in nodes:
+            if d not in visited:
+                print(f"{labels[d]}, {labels[i]}, {w:.1f}")
+        visited.add(i)
+
+def runNeighborJoining(disMatrix, n, new_labels):
+    D = np.array(disMatrix, dtype=float)
+    clusters = [i for i in range(n)]
+    adj = [[] for i in range(n)]
+    if len(D) <= 1:
+        return adj
+    while True:
+        if 2 == n:
+            adj[len(adj) - 1].append((len(adj) - 2, D[0][1]))
+            adj[len(adj) - 2].append((len(adj) - 1, D[0][1]))
+            break
+        totalDist = np.sum(D, axis=0)
+        D1 = (n - 2) * D
+        D1 = D1 - totalDist
+        D1 = D1 - totalDist.reshape((n, 1))
+        np.fill_diagonal(D1, 0.0)
+        # print(D1)
+        index = np.argmin(D1)
+        i = index // n
+        j = index % n
+        delta = (totalDist[i] - totalDist[j]) / (n - 2)
+        li = (D[i, j] + delta) / 2
+        lj = (D[i, j] - delta) / 2
+        d_new = (D[i, :] + D[j, :] - D[i, j]) / 2
+        D = np.insert(D, n, d_new, axis=0)
+        d_new = np.insert(d_new, n, 0.0, axis=0)
+        D = np.insert(D, n, d_new, axis=1)
+        D = np.delete(D, [i, j], 0)
+        D = np.delete(D, [i, j], 1)
+        # print(D)
+
+        m = len(adj)
+        adj.append([])
+        adj[m].append((clusters[i], li))
+        adj[clusters[i]].append((m, li))
+        adj[m].append((clusters[j], lj))
+        adj[clusters[j]].append((m, lj))
+        if i < j:
+            del clusters[j]
+            del clusters[i]
+        else:
+            del clusters[i]
+            del clusters[j]
+        clusters.append(m)
+
+        n -= 1
+
+    return adj

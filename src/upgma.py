@@ -61,7 +61,7 @@ def join_table(table, a, b):
 
 
 # for running the UPGMA algorithm on a labelled table
-def upgma(labels, table):
+def upgma(labels, table,upgmaResults):
     
     # Until all labels have been joined
     while len(labels) > 1:
@@ -78,8 +78,10 @@ def upgma(labels, table):
         # Update the labels accordingly
         join_labels(labels, x, y, height)
 
-        # display the table
 
-    # Return the final label
-    return labels[0]
+    # write to a file
+    with open(upgmaResults, 'w') as upgma_file:
+        upgma_file.write("The respective nodes and their heights are: \n")
+        upgma_file.write(str(labels[0]) + '\n')
+
 

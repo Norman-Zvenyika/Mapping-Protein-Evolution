@@ -1,3 +1,5 @@
+import pdb
+
 def insertR1(distance_matrix):
     new_column = [None] * len(distance_matrix)
     matrix = [row + [col_value] for row, col_value in zip(distance_matrix, new_column)]
@@ -202,6 +204,8 @@ def nj_tree_building(labels, distance_matrix):
 
     while len(labels) > 2:
 
+        #
+        print("Start\n")
         # Calculate matrix with R1
         matrix_with_r1 = r1Values(labels, distance_matrix)
         print("\n")
@@ -210,9 +214,11 @@ def nj_tree_building(labels, distance_matrix):
         updated_matrix = updateQTable(labels, matrix_with_r1)
         displayDistanceTable(labels, updated_matrix)
         print("\n")
+        print("Updated\n")
 
         # Find the nodes with the minimum value in the updated matrix
         nodes = mincell(labels, updated_matrix)
+        print(nodes)
 
         # Compute branch lengths
         branch_lengths = calculate_branch_lengths(matrix_with_r1, labels, nodes)
@@ -245,7 +251,7 @@ def nj_tree_building(labels, distance_matrix):
 
 # Example usage:
 labels = ["A", "B", "C", "D"]
-distance_matrix = [[], [17], [26, 12], [27, 18, 14]]
+distance_matrix = [[], [17], [21, 12], [27, 18, 14]]
 # labels = ["3MXE_A", "3MXE_B", "3PJ6_A", "3QIN_A", "3QIO_A"]
 # distance_matrix = [[], [0.0], [0.14, 0.14], [0.95, 0.95, 0.95], [0.95, 0.95, 0.95, 0.0]]
 tree, branch_lengths_map,final_nodes = nj_tree_building(labels, distance_matrix)
