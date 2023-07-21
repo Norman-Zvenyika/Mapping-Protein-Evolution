@@ -1,29 +1,45 @@
 import re
 
+# Function to get the regex pattern based on user input
+def get_label_pattern():
+    return re.compile(r'^([^\s.]*)(\d+(\.\d+)?)?$')
+
+
 # function for extracting label and row information
-def process_line(line_parts):
+def process_line(line_parts, pattern, line_number):
+    # Apply the pattern to the first part of line_parts
+    match = pattern.match(line_parts[0])
 
-    # Compile a regex pattern to match the label and the first float value (if any)
-    pattern = re.compile(r'(\w+)\|PDB(?:([\d.]+))?$')
-
-    # Search for the pattern in the first part of line_parts
-    match = pattern.search(line_parts[0])
-
-    label = re.match(r"(.+\|PDB)", line_parts[0]).group(1)
-
-    # Check if there's a float value after the "PDB" string
-    if match.group(2):
-        first_value = float(match.group(2))
-        row = [first_value] + list(map(float, line_parts[1:]))
+    # If the pattern matches, extract the label and value
+    if match:
+        label = match.group(1)
+        first_value = match.group(2) if match.group(2) else None
     else:
-        row = list(map(float, line_parts[1:]))
+        label = line_parts[0]
+        first_value = None
+
+    # Initialize row
+    row = []
+    
+    # If a value was extracted with the label, add it to the row
+    if first_value:
+        row.append(float(first_value))
+    
+    # Convert the rest of line_parts to float, ignoring invalid inputs
+    for part in line_parts[1:]:
+        try:
+            row.append(float(part))
+        except ValueError:
+            continue
 
     return label, row
 
 # function for parsing the distance matrix
 def read_distance_matrix(file_path):
-    
-    # open the file and read lines
+    # Get the regex pattern based on user input
+    pattern = get_label_pattern()
+
+    # Open the file and read lines
     with open(file_path, "r") as f:
         lines = f.readlines()
 
@@ -35,18 +51,17 @@ def read_distance_matrix(file_path):
     labels = []
 
     # Iterate through the lines (excluding the first line with num_lines)
-    for line in (lines[1:num_lines+1]):
-        
+    for line_number, line in enumerate(lines[1:num_lines+1], start=1):
         # Split the line by whitespace
         line_parts = line.strip().split()
 
-        #get the label and row information
-        label, row = process_line(line_parts)
+        # Get the label and row information
+        label, row = process_line(line_parts, pattern, line_number)
 
-        #append the label
+        # Append the label
         labels.append(label)
 
         # Append the row to the matrix
         matrix.append(row)
-
+    
     return labels, matrix

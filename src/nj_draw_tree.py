@@ -18,11 +18,13 @@ def parse_input(lines):
 
 # Function to find the root of the tree
 def find_root(tree):
+    root_candidate = None
     for node, children in tree.items():
-        
         # The root node will have more than one child
         if len(children) > 1:
             return node
+        root_candidate = node
+    return root_candidate
 
 
 # Function to read input file, skipping the first two lines
@@ -45,7 +47,7 @@ def save_tree_to_file(tree, node, depth, visited, output_file, is_sibling=False)
         else:
             output_file.write(padding + "+--" + node + "\n")
     else:
-        output_file.write(node + "\n")
+        output_file.write("+--" + node + "\n")
     
     # Recursively call the function for all unvisited children of the node
     children = [child for child in tree[node] if child not in visited]
@@ -54,12 +56,12 @@ def save_tree_to_file(tree, node, depth, visited, output_file, is_sibling=False)
 
 
 # Main function to draw the tree from an input file and save it to an output file
-def draw_tree(input_path, output_path):
+def nj_draw_tree(input_path, output_path):
     input_lines = read_input_file(input_path)
     tree = parse_input(input_lines)
     root = find_root(tree)
     
     # Save the tree to the output file
     with open(output_path, "w") as output_file:
-        output_file.write("The tree generated is shown below: \n\n")
+        output_file.write("The nj tree generated is shown below: \n\n")
         save_tree_to_file(tree, root, 0, set(), output_file)

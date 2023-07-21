@@ -18,17 +18,26 @@ def lowest_cell(table):
 
 
 # for combining two labels in a list of labels
-def join_labels(labels, a, b, height):
-    
+def join_labels(labels, a, b, height, heights):
     # Swap if the indices are not ordered
     if b < a:
         a, b = b, a
 
+    # Calculate the distances from the original nodes to the new node
+    dist_a = height - heights[a]
+    dist_b = height - heights[b]
+
     # Join the labels in the first index, together with each leg distance
-    labels[a] = "(" + labels[a] + "," + labels[b] + ", " + str(height) + ")"
+    labels[a] = "(" + labels[a] + ":" + "{:.5f}".format(dist_a) + "," + labels[b] + ":" + "{:.5f}".format(dist_b) + ")"
 
     # Remove the (now redundant) label in the second index
     del labels[b]
+
+    # Add the new node's height to the list of heights
+    heights[a] = height
+
+    # Remove the old node's height
+    del heights[b]
 
 
 # for joining the entries of a table on the cell (a, b) by averaging their values
@@ -62,7 +71,9 @@ def join_table(table, a, b):
 
 # for running the UPGMA algorithm on a labelled table
 def upgma(labels, table,upgmaResults):
-    
+    # Initialize the list of node heights
+    heights = [0] * len(labels)
+
     # Until all labels have been joined
     while len(labels) > 1:
         
@@ -70,18 +81,16 @@ def upgma(labels, table,upgmaResults):
         min_val, x, y = lowest_cell(table)
 
         # calculate height of the leg of each entry (x, y)
-        height = min_val /2.0
+        height = min_val / 2.0
 
         # Join the table on the cell co-ordinates
         join_table(table, x, y)
 
         # Update the labels accordingly
-        join_labels(labels, x, y, height)
-
+        join_labels(labels, x, y, height, heights)
 
     # write to a file
     with open(upgmaResults, 'w') as upgma_file:
         upgma_file.write("The respective nodes and their heights are: \n")
         upgma_file.write(str(labels[0]) + '\n')
-
 

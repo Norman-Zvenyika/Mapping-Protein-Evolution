@@ -98,8 +98,9 @@ def getFirstSeqId(line):
 def getSequenceName(line):
 	lineList = line.split();
 	
-	if( len(lineList) != 5 or lineList[-1] != "aa" ):
+	if len(lineList) != 5 or lineList[-1] not in ["bp", "aa"]:
 		print( "ERROR: this line [" + line + "] is not a sequence Number Line" );
+		print("Exit here")
 		raise SystemExit(5)
 
 	return lineList[2];
@@ -115,7 +116,7 @@ def getSequenceName(line):
 def getSequenceNumber(line):
 	lineList = line.split();
 	
-	if( len(lineList) != 5 or lineList[-1] != "aa" ):
+	if len(lineList) != 5 or lineList[-1] not in ["bp", "aa"]:
 		print( "ERROR: this line [" + line + "] is not a sequence Number Line" );
 		raise SystemExit(5)
 

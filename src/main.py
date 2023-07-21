@@ -2,7 +2,8 @@ import os
 from read_distance_matrix import *
 from upgma import *
 from neighbor_joining_tree import *
-from draw_tree import *
+from nj_draw_tree import *
+from upgma_draw_tree import *
 import subprocess
 
 
@@ -56,15 +57,17 @@ def main():
     output_dir_name = os.path.join(script_dir, '..', 'results')
 
     # Set file to the output file
-    nj_output_file_name = "neighbor_joining.txt"
-    upgma_output_file_name = "upgma.txt"
-    tree_output_file_name = "tree.txt"
+    nj_output_file_name = "nj_distances_between_nodes.txt"
+    upgma_output_file_name = "upgma_nodes_and_heights.txt"
+    nj_tree_output_file_name = "njtree.txt"
+    upgma_tree_output_file_name = "upgmatree.txt"
     matrix_output_file_name = "distance_matrix.txt"
 
     # set path to the output file
     nj_output_file_path = os.path.join(output_dir_name,nj_output_file_name)
     upgma_output_file_path = os.path.join(output_dir_name,upgma_output_file_name)
-    tree_output_file_path = os.path.join(output_dir_name,tree_output_file_name)
+    nj_tree_output_file_path = os.path.join(output_dir_name,nj_tree_output_file_name)
+    upgma_tree_output_file_path = os.path.join(output_dir_name,upgma_tree_output_file_name)
     distance_matrix_output_file_path = os.path.join(output_dir_name,matrix_output_file_name)
 
     try:
@@ -101,6 +104,10 @@ def main():
                 print("\nRunning the upgma algorithm........")
                 upgma(upgma_labels, upgma_matrix, upgma_output_file_path)
 
+                # drwa the upgma tree representation using the newick format
+                print("\nDrawing the upgma tree........")
+                upgma_draw_tree(upgma_output_file_path, upgma_tree_output_file_path)
+
                 # Call the install_numpy function to ensure NumPy is installed
                 install_numpy()
 
@@ -110,7 +117,7 @@ def main():
 
                 # build a tree illustration
                 print("\nDrawing the tree using the neighbor joining algorithm output........")
-                draw_tree(nj_output_file_path, tree_output_file_path)
+                nj_draw_tree(nj_output_file_path, nj_tree_output_file_path)
 
                 print("\nDone\n")
 

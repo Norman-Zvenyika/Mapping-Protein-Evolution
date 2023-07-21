@@ -7,7 +7,7 @@ create_dirs:
 
 # Run the program
 .PHONY: run
-run: create_dirs
+run: clean create_dirs
 	@python3 src/main.py
 
 # Clean up output files
